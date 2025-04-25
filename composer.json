@@ -37,8 +37,6 @@
   "minimum-stability": "dev",
   "prefer-stable": true,
   "bin": [
-    "bin/aske-npm-build-remove-orphaned-elementals.sh",
-    "bin/sake-npm-watch-remove-orphaned-elementals.sh"
   ],
   "authors": [
     {
