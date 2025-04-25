@@ -4,7 +4,6 @@ namespace Sunnysideup\RemoveOrphanedElementals;
 
 use DNADesign\Elemental\Models\BaseElement;
 use DNADesign\Elemental\Models\ElementalArea;
-use Jean85\Version;
 use SilverStripe\Dev\BuildTask;
 use SilverStripe\ORM\DB;
 use SilverStripe\Versioned\Versioned;
@@ -85,7 +84,6 @@ to confirm deletion.
             }
         }
         echo PHP_EOL;
-
 
         if ($this->confirmed) {
             DB::alteration_message(
