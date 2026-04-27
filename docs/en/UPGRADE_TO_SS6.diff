@@ -1,0 +1,158 @@
+diff --git a/composer.json b/composer.json
+index a183ce1..6966243 100644
+--- a/composer.json
++++ b/composer.json
+@@ -13,11 +13,11 @@
+   ],
+   "license": "BSD-3-Clause",
+   "require": {
+-    "silverstripe/framework": "^5.0",
+-    "silverstripe/admin": "^2.0"
++    "silverstripe/framework": "^6.0",
++    "silverstripe/admin": "^3.0"
+   },
+   "require-dev": {
+-    "sunnysideup/sswebpack_engine_only": "5.x-dev",
++    "sunnysideup/sswebpack_engine_only": "^5.0-dev",
+     "silverleague/ideannotator": "*",
+     "phpunit/phpunit": "^9.6",
+     "squizlabs/php_codesniffer": "^3.7",
+diff --git a/src/RemoveOrphanedElements.php b/src/RemoveOrphanedElements.php
+index 98d77ab..f2b5a9f 100644
+--- a/src/RemoveOrphanedElements.php
++++ b/src/RemoveOrphanedElements.php
+@@ -6,55 +6,54 @@ use DNADesign\Elemental\Models\BaseElement;
+ use DNADesign\Elemental\Models\ElementalArea;
+ use SilverStripe\Dev\BuildTask;
+ use SilverStripe\ORM\DB;
++use SilverStripe\PolyExecution\PolyOutput;
+ use SilverStripe\Versioned\Versioned;
++use Symfony\Component\Console\Command\Command;
++use Symfony\Component\Console\Input\InputInterface;
++use Symfony\Component\Console\Input\InputOption;
+ 
+ class RemoveOrphanedElements extends BuildTask
+ {
+-    private static $segment = 'remove-orphaned-elements';
++    protected static string $commandName = 'remove-orphaned-elements';
+ 
+-    protected $title = 'Remove orphaned elements from the database.';
++    protected string $title = 'Remove orphaned elements from the database.';
+ 
+-    protected $description = 'Checks for orphaned elements and elemental areas and deletes them.';
++    protected static string $description = 'Checks for orphaned elements and elemental areas and deletes them.';
+ 
+-    protected $enabled = true;
++    private static bool $is_enabled = true;
+ 
+     protected $confirmed = false;
+ 
+-    public function run($request)
++    protected function execute(InputInterface $input, PolyOutput $output): int
+     {
+         $confirmMessage = '
+ ==========================================================
+ Please add ?confirm=1 to the url
+-(or from the command line run: vendor/bin/sake dev/tasks/remove-orphaned-elements confirm=1)
++(or from the command line run: vendor/bin/sake tasks:remove-orphaned-elements --confirm)
+ to confirm deletion.
+ ==========================================================
+-
+ ';
+-        if ($request && $request->getVar('confirm')) {
+-            $this->confirmed = (bool) $request->getVar('confirm');
+-        }
++        
++        $this->confirmed = (bool) $input->getOption('confirm');
+ 
+-        if (! $this->confirmed) {
+-            echo $confirmMessage;
++        if (!$this->confirmed) {
++            $output->writeln($confirmMessage);
+         } else {
+-            DB::alteration_message('Confirmed deletion.');
++            $output->writeln('<info>Confirmed deletion.</info>');
+         }
+ 
+-        DB::alteration_message(
+-            'Checking for orphaned element areas',
+-        );
+-
++        $output->writeln('Checking for orphaned element areas');
++        
+         $elementalArea = ElementalArea::get();
+         foreach ($elementalArea as $area) {
+             $ownerPage = $area->getOwnerPage();
+ 
+             if ($ownerPage && $ownerPage->exists()) {
+-                echo '✓';
++                $output->write('✓');
+             } else {
+-                echo PHP_EOL;
+-                DB::alteration_message(
+-                    'Removing: ' . $area->getTitle(),
+-                    'deleted'
++                $output->writeln('');
++                $output->writeln(
++                    '<error>Removing: ' . $area->getTitle() . '</error>'
+                 );
+ 
+                 if ($this->confirmed) {
+@@ -64,21 +63,18 @@ to confirm deletion.
+             }
+         }
+ 
+-        echo PHP_EOL;
+-        DB::alteration_message(
+-            'Checking for orphaned elements',
+-        );
+-
++        $output->writeln('');
++        $output->writeln('Checking for orphaned elements');
++        
+         $elements = BaseElement::get();
+         foreach ($elements as $element) {
+             $area = $element->Parent();
+             if ($area && $area->exists()) {
+-                echo '✓';
++                $output->write('✓');
+             } else {
+-                echo PHP_EOL;
+-                DB::alteration_message(
+-                    'Removing: ' . $element->getTitle(),
+-                    'deleted'
++                $output->writeln('');
++                $output->writeln(
++                    '<error>Removing: ' . $element->getTitle() . '</error>'
+                 );
+                 if ($this->confirmed) {
+                     $element->deleteFromStage(Versioned::DRAFT);
+@@ -87,15 +83,22 @@ to confirm deletion.
+             }
+         }
+ 
+-        echo PHP_EOL;
+-
++        $output->writeln('');
+         if ($this->confirmed) {
+-            DB::alteration_message(
+-                'Removed all orphaned elements and elemental areas.',
+-                'created'
++            $output->writeln(
++                '<info>Removed all orphaned elements and elemental areas.</info>'
+             );
+         } else {
+-            echo $confirmMessage;
++            $output->writeln($confirmMessage);
+         }
++
++        return Command::SUCCESS;
++    }
++
++    public function getOptions(): array
++    {
++        return [
++            new InputOption('confirm', 'c', InputOption::VALUE_NONE, 'Confirm deletion of orphaned elements and elemental areas'),
++        ];
+     }
+ }
