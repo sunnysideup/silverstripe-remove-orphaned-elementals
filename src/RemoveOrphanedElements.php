@@ -33,11 +33,13 @@ to confirm deletion.
         if ($request && $request->getVar('confirm')) {
             $this->confirmed = (bool) $request->getVar('confirm');
         }
+
         if (! $this->confirmed) {
             echo $confirmMessage;
         } else {
             DB::alteration_message('Confirmed deletion.');
         }
+
         DB::alteration_message(
             'Checking for orphaned element areas',
         );
@@ -61,6 +63,7 @@ to confirm deletion.
                 }
             }
         }
+
         echo PHP_EOL;
         DB::alteration_message(
             'Checking for orphaned elements',
@@ -83,6 +86,7 @@ to confirm deletion.
                 }
             }
         }
+
         echo PHP_EOL;
 
         if ($this->confirmed) {
