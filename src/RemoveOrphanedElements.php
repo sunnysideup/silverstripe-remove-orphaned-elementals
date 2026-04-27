@@ -2,6 +2,8 @@
 
 namespace Sunnysideup\RemoveOrphanedElementals;
 
+use Symfony\Component\Console\Input\InputInterface;
+use SilverStripe\Console\PolyOutput;
 use DNADesign\Elemental\Models\BaseElement;
 use DNADesign\Elemental\Models\ElementalArea;
 use SilverStripe\Dev\BuildTask;
@@ -10,9 +12,9 @@ use SilverStripe\Versioned\Versioned;
 
 class RemoveOrphanedElements extends BuildTask
 {
-    private static $segment = 'remove-orphaned-elements';
+    protected static string $commandName = 'remove-orphaned-elements';
 
-    protected $title = 'Remove orphaned elements from the database.';
+    protected string $title = 'Remove orphaned elements from the database.';
 
     protected $description = 'Checks for orphaned elements and elemental areas and deletes them.';
 
@@ -20,7 +22,7 @@ class RemoveOrphanedElements extends BuildTask
 
     protected $confirmed = false;
 
-    public function run($request)
+    protected function execute(InputInterface $input, PolyOutput $output): int
     {
         $confirmMessage = '
 ==========================================================
@@ -33,17 +35,14 @@ to confirm deletion.
         if ($request && $request->getVar('confirm')) {
             $this->confirmed = (bool) $request->getVar('confirm');
         }
-
         if (! $this->confirmed) {
             echo $confirmMessage;
         } else {
             DB::alteration_message('Confirmed deletion.');
         }
-
         DB::alteration_message(
             'Checking for orphaned element areas',
         );
-
         $elementalArea = ElementalArea::get();
         foreach ($elementalArea as $area) {
             $ownerPage = $area->getOwnerPage();
@@ -63,12 +62,10 @@ to confirm deletion.
                 }
             }
         }
-
         echo PHP_EOL;
         DB::alteration_message(
             'Checking for orphaned elements',
         );
-
         $elements = BaseElement::get();
         foreach ($elements as $element) {
             $area = $element->Parent();
@@ -86,9 +83,7 @@ to confirm deletion.
                 }
             }
         }
-
         echo PHP_EOL;
-
         if ($this->confirmed) {
             DB::alteration_message(
                 'Removed all orphaned elements and elemental areas.',
@@ -97,5 +92,6 @@ to confirm deletion.
         } else {
             echo $confirmMessage;
         }
+        return 0;
     }
 }
