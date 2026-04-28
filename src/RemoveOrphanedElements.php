@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sunnysideup\RemoveOrphanedElementals;
 
+use Override;
 use DNADesign\Elemental\Models\BaseElement;
 use DNADesign\Elemental\Models\ElementalArea;
 use SilverStripe\Dev\BuildTask;
-use SilverStripe\ORM\DB;
 use SilverStripe\PolyExecution\PolyOutput;
 use SilverStripe\Versioned\Versioned;
 use Symfony\Component\Console\Command\Command;
@@ -95,6 +97,7 @@ to confirm deletion.
         return Command::SUCCESS;
     }
 
+    #[Override]
     public function getOptions(): array
     {
         return [
