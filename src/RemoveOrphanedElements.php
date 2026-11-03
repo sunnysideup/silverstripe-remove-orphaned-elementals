@@ -4,6 +4,7 @@ namespace Sunnysideup\RemoveOrphanedElementals;
 
 use DNADesign\Elemental\Models\BaseElement;
 use DNADesign\Elemental\Models\ElementalArea;
+use SilverStripe\Control\Director;
 use SilverStripe\Dev\BuildTask;
 use SilverStripe\ORM\DB;
 use SilverStripe\Versioned\Versioned;
@@ -32,6 +33,14 @@ to confirm deletion.
 ';
         if ($request && $request->getVar('confirm')) {
             $this->confirmed = (bool) $request->getVar('confirm');
+        }
+
+        if ($this->confirmed && $request) {
+            if (! Director::is_cli()) {
+                echo 'This task can only be run on the command line.';
+
+                return;
+            }
         }
 
         if (! $this->confirmed) {
