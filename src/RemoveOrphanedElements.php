@@ -13,6 +13,7 @@ use SilverStripe\Versioned\Versioned;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use SilverStripe\Control\Director;
 
 class RemoveOrphanedElements extends BuildTask
 {
@@ -37,6 +38,12 @@ to confirm deletion.
 ';
         
         $this->confirmed = (bool) $input->getOption('confirm');
+
+        if ($this->confirmed && ! Director::is_cli()) {
+            $output->writeln('This task can only be run on the command line.');
+
+            return Command::FAILURE;
+        }
 
         if (!$this->confirmed) {
             $output->writeln($confirmMessage);
